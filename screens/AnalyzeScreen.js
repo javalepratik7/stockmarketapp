@@ -10,7 +10,8 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
-import SuggestionCard from "../components/SuggestionCard"
+import SuggestionCard from "../components/SuggestionCard";
+import { analyzeInvestment } from '../src/config/api'; // Import the API function
 
 const AnalyzeScreen = () => {
   const [formData, setFormData] = useState({
@@ -31,8 +32,16 @@ const AnalyzeScreen = () => {
   };
 
   const handleSubmit = async () => {
+    // Validation
     if (!formData.price || !formData.investmentType || !formData.duration) {
       setError('Please fill in all required fields');
+      return;
+    }
+
+    // Validate price is a positive number
+    const price = parseFloat(formData.price);
+    if (isNaN(price) || price <= 0) {
+      setError('Please enter a valid investment amount');
       return;
     }
 
@@ -41,41 +50,32 @@ const AnalyzeScreen = () => {
     setSuggestions(null);
 
     try {
-      // Simulate API call - replace with actual API
-      const mockSuggestions = [
-        {
-          name: 'Tech Growth ETF',
-          description: 'Diversified technology sector ETF with strong growth potential and moderate risk exposure.',
-          current_price: '150.75',
-          sell_price: '175.00',
-          stop_loss: '140.00',
-          expected_return: '16.2%'
-        },
-        {
-          name: 'Green Energy Fund',
-          description: 'Sustainable energy investments focusing on solar and wind power companies.',
-          current_price: '85.50',
-          sell_price: '95.00',
-          stop_loss: '78.00',
-          expected_return: '11.1%'
-        },
-        {
-          name: 'Blue Chip Stocks',
-          description: 'Portfolio of established companies with stable dividends and consistent performance.',
-          current_price: '245.30',
-          sell_price: '265.00',
-          stop_loss: '230.00',
-          expected_return: '8.0%'
-        }
-      ];
+      // Prepare data for API call
+      const investmentData = {
+        price: parseFloat(formData.price),
+        risk: parseInt(formData.risk),
+        investmentType: formData.investmentType,
+        duration: formData.duration
+      };
 
-      setTimeout(() => {
-        setSuggestions(mockSuggestions);
-        setLoading(false);
-      }, 2000);
+      console.log('Sending investment data:', investmentData);
+
+      // Call the actual API
+      const response = await analyzeInvestment(investmentData);
+      
+      console.log('API Response:', response);
+
+      // Handle the response structure
+      if (response && response.suggestions) {
+        setSuggestions(response.suggestions);
+      } else {
+        setError('No suggestions received from the server');
+      }
       
     } catch (err) {
-      setError(err.message || 'An unexpected error occurred');
+      console.error('API Error:', err);
+      setError(err.message || 'An unexpected error occurred while analyzing your investment');
+    } finally {
       setLoading(false);
     }
   };
@@ -493,7 +493,6 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
     borderTopColor: 'white',
     borderRadius: 10,
-    animation: 'spin 1s linear infinite',
   },
   errorContainer: {
     backgroundColor: '#1e293b',

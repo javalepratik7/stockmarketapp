@@ -11,6 +11,7 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
+import { signIn } from "../src/config/api";
 
 const SignUpScreen = ({ onSignUp, onNavigateToLogin }) => {
   const [formData, setFormData] = useState({
@@ -61,22 +62,95 @@ const SignUpScreen = ({ onSignUp, onNavigateToLogin }) => {
     return true;
   }, [formData]);
 
-  const handleSignUp = useCallback(async () => {
-    if (!validateForm()) return;
+  // const handleSignUp = useCallback(async () => {
+  //   if (!validateForm()) return;
 
-    setLoading(true);
+  //   setLoading(true);
     
-    // Simulate API call for trader account creation
-    setTimeout(() => {
-      setLoading(false);
-      // In real app, you would send formData to your backend
+  //   try {
+  //     // Prepare data for signup - adjust fields according to your API requirements
+  //     const signupData = {
+  //       name: `${formData.firstName} ${formData.lastName}`,
+  //       email: formData.email,
+  //       password: formData.password,
+  //       riskAppetite: formData.riskAppetite,
+  //       investmentAmount: formData.investmentAmount ? parseInt(formData.investmentAmount) : 0
+  //     };
+
+  //     const response = await signIn(signupData);
+      
+  //     // If signup is successful, call the onSignUp callback
+  //     if (response && response.token) {
+  //       Alert.alert(
+  //         'Account Created Successfully!',
+  //         'Welcome to TradeSmart Pro. Your trading account is being set up.',
+  //         [{ text: 'Continue', onPress: onSignUp }]
+  //       );
+  //     } else {
+  //       Alert.alert('Signup Failed', 'Invalid response from server');
+  //     }
+  //   } catch (error) {
+  //     console.error('Signup error:', error);
+  //     Alert.alert('Signup Failed', error.message || 'An error occurred during signup');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, [formData, validateForm, onSignUp]);
+
+
+  const handleSignUp = useCallback(async () => {
+  if (!validateForm()) return;
+
+  setLoading(true);
+  
+  try {
+    // Prepare data for signup - adjust fields according to your API requirements
+    const signupData = {
+      name: `${formData.firstName} ${formData.lastName}`,
+      email: formData.email,
+      password: formData.password,
+      riskAppetite: formData.riskAppetite,
+      investmentAmount: formData.investmentAmount ? parseInt(formData.investmentAmount) : 0
+    };
+
+    const response = await signIn(signupData);
+    
+    // If signup is successful, show success message and navigate to login
+    if (response && response.success) {
       Alert.alert(
         'Account Created Successfully!',
-        'Welcome to TradeSmart Pro. Your trading account is being set up.',
-        [{ text: 'Continue', onPress: onSignUp }]
+        response.message || 'Welcome to TradeSmart Pro. Please login to continue.',
+        [
+          { 
+            text: 'Continue to Login', 
+            onPress: () => {
+              // Navigate to login page after successful signup
+              onNavigateToLogin();
+              // Clear form
+              setFormData({
+                firstName: '',
+                lastName: '',
+                email: '',
+                password: '',
+                confirmPassword: '',
+                riskAppetite: '',
+                investmentAmount: ''
+              });
+            }
+          }
+        ]
       );
-    }, 2000);
-  }, [formData, validateForm, onSignUp]);
+    } else {
+      Alert.alert('Signup Failed', 'Invalid response from server');
+    }
+  } catch (error) {
+    console.error('Signup error:', error);
+    Alert.alert('Signup Failed', error.message || 'An error occurred during signup');
+  } finally {
+    setLoading(false);
+  }
+}, [formData, validateForm, onNavigateToLogin]);
+
 
   const getPasswordStrength = useCallback(() => {
     if (formData.password.length === 0) return { text: '', color: '#64748b' };
@@ -479,5 +553,4 @@ const styles = StyleSheet.create({
   },
 });
 
-// export default React.memo(SignUpScreen);
-export default SignUpScreen
+export default SignUpScreen;

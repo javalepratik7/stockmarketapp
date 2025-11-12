@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import LoadingSpinner from '../components/LoadingSpinner';
 import MarketCard from '../components/MarketCard';
+import { getMarketStats } from '../src/config/api'; // Adjust the import path as needed
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -26,71 +27,30 @@ const MarketStatsScreen = () => {
       setLoading(true);
       setError(null);
       
-      // Simulate API call with your backend data structure
-      const mockData = {
-        indices: [
-          {
-            name: 'Nifty50',
-            current: 22495.60,
-            change: 125.45,
-            change_pct: 0.56,
-            high: 22520.80,
-            low: 22380.25,
-            volume: '245.6M'
-          },
-          {
-            name: 'Sensex',
-            current: 74119.39,
-            change: 350.81,
-            change_pct: 0.48,
-            high: 74200.50,
-            low: 73850.75,
-            volume: '189.3M'
-          },
-          {
-            name: 'Bank Nifty',
-            current: 48225.15,
-            change: -85.30,
-            change_pct: -0.18,
-            high: 48400.60,
-            low: 48050.45,
-            volume: '156.8M'
-          }
-        ],
-        commodities: [
-          {
-            name: 'Gold (1g)',
-            current: 5850,
-            change: -50,
-            change_pct: -0.85,
-            high: 5900,
-            low: 5840,
-            volume: '12.4K'
-          },
-          {
-            name: 'Silver (1kg)',
-            current: 78500,
-            change: -1200,
-            change_pct: -1.51,
-            high: 79800,
-            low: 78400,
-            volume: '8.7K'
-          },
-          {
-            name: 'Crude Oil (per barrel)',
-            current: 6200,
-            change: 150,
-            change_pct: 2.48,
-            high: 6250,
-            low: 6050,
-            volume: '45.2K'
-          }
-        ]
+      // API call to get market stats
+      const response = await getMarketStats();
+      console.log("responce",response)
+      
+      // Transform API response to match the expected format
+      const transformedData = {
+        indices: response.indices.map(index => ({
+          ...index,
+          high: index.high || 0, // Add default values if not provided by API
+          low: index.low || 0,
+          volume: index.volume || 'N/A'
+        })),
+        commodities: response.commodities.map(commodity => ({
+          ...commodity,
+          high: commodity.high || 0,
+          low: commodity.low || 0,
+          volume: commodity.volume || 'N/A'
+        }))
       };
       
-      setData(mockData);
+      setData(transformedData);
       setLastUpdated(new Date());
     } catch (err) {
+      console.error('Market data fetch error:', err);
       setError('Failed to fetch market data. Please try again.');
     } finally {
       setLoading(false);
@@ -162,6 +122,8 @@ const MarketStatsScreen = () => {
   );
 
   const MarketSummary = () => {
+    if (!data) return null;
+    
     const totalIndices = data?.indices?.length || 0;
     const upIndices = data?.indices?.filter(item => item.change >= 0).length || 0;
     const marketTrend = upIndices > totalIndices / 2 ? 'Bullish' : 'Bearish';
@@ -250,7 +212,7 @@ const MarketStatsScreen = () => {
         </View>
 
         {/* Market Summary */}
-        <MarketSummary />
+        {data && <MarketSummary />}
 
         {/* Market Indices Section */}
         {activeTab === 'indices' && data?.indices && (
@@ -512,4 +474,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MarketStatsScreen
+export default MarketStatsScreen;

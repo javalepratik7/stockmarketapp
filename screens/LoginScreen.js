@@ -11,6 +11,7 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
+import { login } from "../src/config/api";
 
 const LoginScreen = ({ onLogin, onNavigateToSignUp }) => {
   const [email, setEmail] = useState('');
@@ -41,12 +42,23 @@ const LoginScreen = ({ onLogin, onNavigateToSignUp }) => {
 
     setLoading(true);
     
-    // Simulate API authentication for trading platform
-    setTimeout(() => {
+    try {
+      const response = await login(email, password);
+      
+      // If login is successful, call the onLogin callback
+      if (response && response.token) {
+        Alert.alert('Success', 'Login successful!', [
+          { text: 'OK', onPress: onLogin }
+        ]);
+      } else {
+        Alert.alert('Login Failed', 'Invalid response from server');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      Alert.alert('Login Failed', error.message || 'An error occurred during login');
+    } finally {
       setLoading(false);
-      // In real app, you would validate credentials here
-      onLogin();
-    }, 2000);
+    }
   }, [email, password, onLogin]);
 
   const handleQuickDemo = useCallback(() => {
@@ -142,7 +154,7 @@ const LoginScreen = ({ onLogin, onNavigateToSignUp }) => {
             onPress={handleQuickDemo}
             disabled={loading}
           >
-            <Text style={styles.demoButtonText}>Try Demo Credentials</Text>
+            <Text style={styles.demoButtonText}>Use Demo Credentials</Text>
           </TouchableOpacity>
 
           <View style={styles.divider}>
@@ -330,4 +342,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default LoginScreen
+export default LoginScreen;
