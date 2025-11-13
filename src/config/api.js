@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Base URL configuration
 // const BASE_URL = 'https://78hs53hb-5000.inc1.devtunnels.ms';
-const BASE_URL = 'https://sm-7jf98liuo-javalepratik7s-projects.vercel.app';
+const BASE_URL = 'https://sm-eight-sigma.vercel.app';
 
 // Create Axios instance
 const api = axios.create({
