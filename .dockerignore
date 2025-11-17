@@ -1,0 +1,10 @@
+node_modules
+.expo
+.expo-shared
+android
+ios
+.vscode
+npm-debug.log
+yarn-error.log
+dist
+build
